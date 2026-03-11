@@ -63,7 +63,7 @@
                             Id='LicenseFile'
                             Name='LICENSE'
                             DiskId='1'
-                            Source='LICENSE'
+                            Source='..\LICENSE'
                             KeyPath='yes' />
                     </Component>
 
