@@ -125,6 +125,46 @@ jobs:
             ${{ env.ASSET_PATH }}
             ${{ env.CHECKSUM_PATH }}
 
+      # --- Windows MSI installer ---
+      - name: Install cargo-wix
+        if: contains(matrix.target, 'windows')
+        run: cargo install cargo-wix --version 0.3.9
+
+      - name: Build MSI installer
+        if: contains(matrix.target, 'windows')
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          MSI_NAME="${BINARY}-${TAG}-${{ matrix.target }}.msi"
+
+          cargo wix --no-build \
+            --nocapture \
+            --package llmfit \
+            --target ${{ matrix.target }} \
+            --output "${RUNNER_TEMP}/${MSI_NAME}"
+
+          # Generate SHA256 checksum
+          cd "${RUNNER_TEMP}"
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "${MSI_NAME}" | awk '{print $1 "  " $2}' > "${MSI_NAME}.sha256"
+          elif command -v shasum >/dev/null 2>&1; then
+            shasum -a 256 "${MSI_NAME}" | awk '{print $1 "  " $2}' > "${MSI_NAME}.sha256"
+          fi
+
+          echo "MSI_NAME=${MSI_NAME}" >> "$GITHUB_ENV"
+          echo "MSI_PATH=${RUNNER_TEMP}/${MSI_NAME}" >> "$GITHUB_ENV"
+          echo "MSI_CHECKSUM_PATH=${RUNNER_TEMP}/${MSI_NAME}.sha256" >> "$GITHUB_ENV"
+
+      - name: Upload MSI artifact
+        if: contains(matrix.target, 'windows')
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: ${{ env.MSI_NAME }}
+          path: |
+            ${{ env.MSI_PATH }}
+            ${{ env.MSI_CHECKSUM_PATH }}
+
   release:
     needs: build
     runs-on: ubuntu-latest
@@ -142,6 +182,7 @@ jobs:
           files: |
             artifacts/**/*.tar.gz
             artifacts/**/*.zip
+            artifacts/**/*.msi
             artifacts/**/*.sha256
 
   publish-crate:
