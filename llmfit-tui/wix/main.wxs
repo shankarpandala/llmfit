@@ -63,7 +63,7 @@
                             Id='LicenseFile'
                             Name='LICENSE'
                             DiskId='1'
-                            Source='..\LICENSE'
+                            Source='LICENSE'
                             KeyPath='yes' />
                     </Component>
 
@@ -90,7 +90,7 @@
 
         <!-- UI: minimal with license agreement -->
         <UIRef Id='WixUI_Minimal' />
-        <WixVariable Id='WixUILicenseRtf' Value='wix\License.rtf' />
+        <WixVariable Id='WixUILicenseRtf' Value='llmfit-tui\wix\License.rtf' />
 
     </Product>
 
